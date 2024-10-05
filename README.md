@@ -1,4 +1,4 @@
-# qrian
+# QRIAN (QR-based Integrated Area Navigator)
 
 A new Flutter project.
 
