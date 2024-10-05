@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "928479886244",
+    "project_id": "qrian-2abf7",
+    "storage_bucket": "qrian-2abf7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928479886244:android:95780b7da31e3436c11f31",
+        "android_client_info": {
+          "package_name": "com.example.qrian"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB80zh1L2UMqurHOS251cWvNv4TYdf5w3k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
