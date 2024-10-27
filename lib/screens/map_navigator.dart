@@ -11,10 +11,16 @@ class MapNavigator extends StatefulWidget {
 }
 
 class _MapNavigatorState extends State<MapNavigator> {
-  List<String> years = [];
+  List<String> nodes = [];
   String? currentNode;
   String? destinationNode;
-
+  int currentIndex = 0;
+  double distanceCovered = 0;
+  List<String>? path;
+  Map? distances;
+  double? distance;
+  bool hasData = false;
+  TextStyle? style;
   @override
   void initState() {
     super.initState();
@@ -29,11 +35,11 @@ class _MapNavigatorState extends State<MapNavigator> {
         .get();
 
     setState(() {
-      years = test.docs.map((doc) => doc.id).toList();
+      nodes = test.docs.map((doc) => doc.id).toList();
+      style = Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 18);
     });
   }
 
-  // Dijkstra's Algorithm
   // Dijkstra's Algorithm
   Map<String, dynamic> dijkstra(
       Map<String, dynamic> graph, String startNode, String endNode) {
@@ -78,7 +84,11 @@ class _MapNavigatorState extends State<MapNavigator> {
       path.insert(0, current);
       current = prevNodes[current];
     }
-    return {'path': path, 'distance': distances[endNode]};
+    return {
+      'path': path,
+      'distances': distances,
+      'distance': distances[endNode]
+    };
   }
 
   Future<void> navigate() async {
@@ -99,29 +109,20 @@ class _MapNavigatorState extends State<MapNavigator> {
 
     final result = dijkstra(graph, currentNode!, destinationNode!);
     final path = result['path'];
+    final distances = result['distances'];
     final distance = result['distance'];
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Navigation Result'),
-          content: Text(distance != null
-              ? 'Path: ${path.join(' -> ')}\nDistance: $distance'
-              : 'No path found!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+    if (mounted) {
+      setState(() {
+        this.path = path;
+        this.distances = distances;
+        this.distance = distance;
+        hasData = true;
+      });
+    }
     // Use the result path and distance as needed
     // 'Path: ${path.join(' -> ')}\nDistance: $distance
-    print('Shortest path: ${result['path']}, Distance: ${result['distance']}');
+    debugPrint(
+        'Shortest path: ${result['path']}, Distance: ${result['distance']}');
   }
 
   @override
@@ -129,92 +130,341 @@ class _MapNavigatorState extends State<MapNavigator> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 240, 249, 255),
       appBar: AppBar(
-        // centerTitle: true,
+        centerTitle: true,
         elevation: 1.75,
-        // toolbarHeight: 75,
         backgroundColor: Colors.blue.shade100,
-        // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-        //     // bottomLeft: Radius.circular(20),
-        //     // bottomRight:
-        //     Radius.circular(20))),
-        // leading: const DrawerButton(),
+        leading: BackButton(
+          onPressed: () {
+            if (hasData) {
+              setState(() {
+                distanceCovered = 0;
+                currentNode = null;
+                destinationNode = null;
+                currentIndex = 0;
+                hasData = false;
+              });
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
         title: Text(widget.name,
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall!
                 .copyWith(fontWeight: FontWeight.bold)),
         shadowColor: Colors.blue.shade900,
-        // surfaceTintColor: Colors.blueGrey,
-        // foregroundColor: Colors.white,
-        actions: const [
-          // ThemeSwitcher()
-          // IconButton(
-          //     onPressed: () {
-          //       Navigator.pushNamed(context, '/scan-qr');
-          //     },
-          //     icon: const Icon(Icons.qr_code_scanner_rounded))
-        ],
-        // backgroundColor: Colors.blue.shade300,
+        actions: const [],
       ),
-
-      // appBar: AppBar(
-      //   title: Text(widget.name),
-      // ),
       body: Padding(
         padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Text('Current: '),
-            DropdownButtonFormField<String>(
-              value: currentNode,
-              onChanged: (value) {
-                setState(() {
-                  currentNode = value;
-                });
-              },
-              items: years.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-            ),
-            const Text('Destination: '),
-            DropdownButtonFormField<String>(
-              value: destinationNode,
-              onChanged: (value) {
-                setState(() {
-                  destinationNode = value;
-                });
-              },
-              items: years.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-                onPressed: navigate,
-                style: const ButtonStyle(
-                    foregroundColor: WidgetStatePropertyAll(Colors.white),
-                    backgroundColor: WidgetStatePropertyAll(
-                        Color.fromARGB(255, 13, 78, 153)),
-                    side: WidgetStatePropertyAll(
-                        BorderSide(width: 0.5, color: Colors.white)),
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    )),
-                    minimumSize: WidgetStatePropertyAll(Size(100, 50))),
-                child: const Text('Navigate')),
-          ],
-        ),
+        child: hasData
+            ? distance != null
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Destination is $destinationNode',
+                        style: style,
+                      ),
+                      Text(
+                        'Next point to go: ${currentIndex < (path!.length - 1) ? path![currentIndex + 1] : path![currentIndex]} with a distance of ${currentIndex < (distances!.length - 1) ? distances![path?[currentIndex + 1]] : distances![path?[currentIndex]]} meters',
+                        style: style,
+                      ),
+                      Text(
+                        'Distance to destination: $distance meters',
+                        style: style,
+                      ),
+                      Text(
+                        'Complete Path Overview: ${path?.join(' -> ')}',
+                        style: style,
+                      ),
+                      Text(
+                        'Total distance covered so far: $distanceCovered',
+                        style: style,
+                      ),
+                      const SizedBox(height: 15),
+                      Flexible(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Update current location: ',
+                                style: style,
+                              ),
+                            ),
+                            Flexible(
+                              child: SizedBox(
+                                width: 175,
+                                height: 50,
+                                child: DropdownButtonFormField<String>(
+                                  iconEnabledColor:
+                                      const Color.fromARGB(255, 136, 172, 202),
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.blue.shade50,
+                                    label: Padding(
+                                      padding: const EdgeInsets.only(left: 5),
+                                      child: Text(
+                                        'Current',
+                                        style: TextStyle(
+                                            color: Colors.blue.shade200),
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: const BorderSide(
+                                            color: Colors.red)),
+                                    enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(
+                                            color: Colors.blue.shade200)),
+                                    disabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(
+                                            color: Colors.lightBlue.shade100)),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(
+                                            color: Colors.blue.shade300)),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: BorderSide(
+                                          color: Colors.red.shade300),
+                                    ),
+                                  ),
+                                  value: path![currentIndex],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      currentNode = value;
+                                      int temp = path!.indexOf(currentNode!);
+                                      currentIndex = temp < (path!.length - 1)
+                                          ? temp
+                                          : currentIndex;
+                                    });
+                                  },
+                                  items: path!.map((item) {
+                                    return DropdownMenuItem(
+                                      value: item,
+                                      child: Text(item),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 25,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            path![currentIndex] != currentNode
+                                ? ElevatedButton(
+                                    style: const ButtonStyle(
+                                        foregroundColor: WidgetStatePropertyAll(
+                                            Colors.white),
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            Color.fromARGB(255, 13, 78, 153)),
+                                        side: WidgetStatePropertyAll(BorderSide(
+                                            width: 0.5, color: Colors.white)),
+                                        shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(20)),
+                                        )),
+                                        minimumSize: WidgetStatePropertyAll(
+                                            Size(150, 50))),
+                                    onPressed: () {
+                                      setState(() {
+                                        currentIndex--;
+                                        distanceCovered +=
+                                            distances![path?[currentIndex + 1]];
+                                      });
+                                    },
+                                    child: const Text('Prev'))
+                                : const SizedBox(),
+                            ElevatedButton(
+                                style: const ButtonStyle(
+                                    foregroundColor:
+                                        WidgetStatePropertyAll(Colors.white),
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        Color.fromARGB(255, 13, 78, 153)),
+                                    side: WidgetStatePropertyAll(BorderSide(
+                                        width: 0.5, color: Colors.white)),
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(20)),
+                                    )),
+                                    minimumSize:
+                                        WidgetStatePropertyAll(Size(150, 50))),
+                                onPressed: () {
+                                  setState(() {
+                                    if (currentIndex < (path!.length - 2)) {
+                                      currentIndex++;
+                                      distanceCovered +=
+                                          distances![path?[currentIndex + 1]];
+                                    } else {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title:
+                                                const Text('Navigation Result'),
+                                            content: Text(
+                                              'You have reached your destination.',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelLarge,
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    }
+                                  });
+                                },
+                                child: Text(
+                                    path![currentIndex] == destinationNode
+                                        ? 'Finish'
+                                        : 'Next')),
+                          ],
+                        ),
+                      )
+                    ],
+                  )
+                : const Center(
+                    child: Text('No path found!'),
+                  )
+            : Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  // const Text('Current: '),
+                  DropdownButtonFormField<String>(
+                    iconEnabledColor: const Color.fromARGB(255, 136, 172, 202),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.blue.shade50,
+                      label: Padding(
+                        padding: const EdgeInsets.only(left: 5),
+                        child: Text(
+                          'Current',
+                          style: TextStyle(color: Colors.blue.shade200),
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: Colors.red)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.blue.shade200)),
+                      disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide:
+                              BorderSide(color: Colors.lightBlue.shade100)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.blue.shade300)),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.red.shade300),
+                      ),
+                    ),
+                    value: currentNode,
+                    onChanged: (value) {
+                      setState(() {
+                        currentNode = value;
+                      });
+                    },
+                    items: nodes.map((item) {
+                      return DropdownMenuItem(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  // const Text('Destination: '),
+                  DropdownButtonFormField<String>(
+                    iconEnabledColor: const Color.fromARGB(255, 136, 172, 202),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.blue.shade50,
+                      label: Padding(
+                        padding: const EdgeInsets.only(left: 5),
+                        child: Text(
+                          'Destination',
+                          style: TextStyle(color: Colors.blue.shade200),
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: Colors.red)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.blue.shade200)),
+                      disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide:
+                              BorderSide(color: Colors.lightBlue.shade100)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.blue.shade300)),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.red.shade300),
+                      ),
+                    ),
+                    value: destinationNode,
+                    onChanged: (value) {
+                      setState(() {
+                        destinationNode = value;
+                      });
+                    },
+                    items: nodes.map((item) {
+                      return DropdownMenuItem(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                      onPressed: navigate,
+                      style: const ButtonStyle(
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          backgroundColor: WidgetStatePropertyAll(
+                              Color.fromARGB(255, 13, 78, 153)),
+                          side: WidgetStatePropertyAll(
+                              BorderSide(width: 0.5, color: Colors.white)),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          )),
+                          minimumSize: WidgetStatePropertyAll(Size(100, 50))),
+                      child: const Text('Navigate')),
+                ],
+              ),
       ),
     );
   }

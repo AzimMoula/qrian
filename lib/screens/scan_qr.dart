@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qrian/global/widgets/theme_switcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:qrian/screens/map_details.dart';
 
 class ScanQR extends StatefulWidget {
   const ScanQR({super.key});
@@ -13,9 +13,7 @@ class ScanQR extends StatefulWidget {
 class _ScanQRState extends State<ScanQR> with WidgetsBindingObserver {
   int index = 1;
   String? mapName;
-  String? uid;
-  String? event;
-  String? status;
+  String? nodeName;
   Barcode? _barcode;
   bool approved = false;
   late MobileScannerController controller;
@@ -51,7 +49,18 @@ class _ScanQRState extends State<ScanQR> with WidgetsBindingObserver {
         overflow: TextOverflow.fade,
         style: TextStyle(color: Colors.white),
       );
+    } else if (value.displayValue!.split("\n").length != 2) {
+      return const Text(
+        'Invalid QR',
+        overflow: TextOverflow.fade,
+        style: TextStyle(color: Colors.white),
+      );
     } else {
+      setState(() {
+        mapName = value.displayValue!.split("\n").first;
+        nodeName = value.displayValue!.split("\n")[1];
+      });
+
       return ListTile(
         title: Text(
           mapName ?? 'No display value.',
@@ -59,19 +68,10 @@ class _ScanQRState extends State<ScanQR> with WidgetsBindingObserver {
           style: const TextStyle(color: Colors.white),
         ),
         subtitle: Text(
-          status ?? 'No display value.',
+          nodeName ?? 'No display value.',
           overflow: TextOverflow.fade,
           style: const TextStyle(color: Colors.white),
         ),
-        trailing: ElevatedButton(
-            onPressed: () {
-              launchUrlString(value.displayValue!);
-            },
-            style: approved
-                ? const ButtonStyle(
-                    overlayColor: WidgetStatePropertyAll(Colors.transparent))
-                : Theme.of(context).elevatedButtonTheme.style,
-            child: approved ? const Icon(Icons.check) : const Text('Approve')),
       );
     }
   }
@@ -83,56 +83,34 @@ class _ScanQRState extends State<ScanQR> with WidgetsBindingObserver {
     setState(() {
       _barcode = barcodes.barcodes.firstOrNull;
     });
+    controller.stop();
+    Navigator.push(context, MaterialPageRoute(
+      builder: (context) {
+        return MapDetails(
+          name: _barcode!.displayValue!.split('\n').first,
+          currentNode: _barcode!.displayValue!.split('\n')[1],
+        );
+      },
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.lightGreen.shade50,
       backgroundColor: const Color.fromARGB(255, 244, 251, 255),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         centerTitle: true,
         elevation: 1.75,
-        // toolbarHeight: 75,
         backgroundColor: Colors.blue.shade100,
-        // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-        //     // bottomLeft: Radius.circular(20),
-        //     // bottomRight:
-        //     Radius.circular(20))),
-        // leading: const DrawerButton(),
         title: Text('QRIAN',
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall!
                 .copyWith(fontWeight: FontWeight.bold)),
         shadowColor: Colors.blue.shade900,
-        // surfaceTintColor: Colors.blueGrey,
-        // foregroundColor: Colors.white,
-        actions: const [
-          ThemeSwitcher()
-          // IconButton(
-          //     onPressed: () {
-          //       Navigator.pushNamed(context, '/scan-qr');
-          //     },
-          //     icon: const Icon(Icons.qr_code_scanner_rounded))
-        ],
-        // backgroundColor: Colors.blue.shade300,
+        actions: const [ThemeSwitcher()],
       ),
-
-      // appBar: AppBar(
-      //   toolbarHeight: 75,
-      //   shape: const ContinuousRectangleBorder(
-      //       borderRadius: BorderRadius.only(
-      //           bottomLeft: Radius.circular(25),
-      //           bottomRight: Radius.circular(25))),
-      //   elevation: 10,
-      //   title: const Text('QRIAN'),
-      //   shadowColor: Colors.green,
-      //   surfaceTintColor: Colors.blueGrey,
-      //   foregroundColor: Colors.white,
-      //   backgroundColor: Colors.teal,
-      // ),
       body: Stack(
         children: [
           MobileScanner(

@@ -1,12 +1,13 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:qrian/admin/screens/generate_map.dart';
 import 'package:qrian/global/widgets/text_field.dart';
 import 'package:qrian/global/widgets/theme_switcher.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -17,11 +18,32 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int index = 0;
+  bool mapNameExists = false;
   final TextEditingController mapName = TextEditingController();
   Future<File?> pickExcelFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['xlsx', 'csv'],
+      allowedExtensions: [
+        'xl',
+        'xlsx',
+        'xlsm',
+        'xlsb',
+        'xlam',
+        'xltx',
+        'xltm',
+        'xls',
+        'xlt',
+        'htm',
+        'html',
+        'mht',
+        'mhtml',
+        'xml',
+        'xla',
+        'xlw',
+        'odc',
+        'ods',
+        'csv'
+      ],
     );
 
     if (result != null) {
@@ -32,15 +54,26 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     }
   }
 
-  Future<void> uploadToFirestore(File file, String name) async {
+  Future<Sheet?> uploadToFirestore(File file, String name) async {
     try {
+      final doc =
+          await FirebaseFirestore.instance.collection('Maps').doc(name).get();
+
+      if (doc.exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Map name already exists, try another name.'),
+          ));
+        }
+        return null;
+      }
       var bytes = await file.readAsBytes();
       var excel = Excel.decodeBytes(bytes);
 
       var sheet = excel.tables[excel.tables.keys.first];
       if (sheet == null) {
         debugPrint("Error: No sheet found in Excel file");
-        return;
+        return null;
       }
 
       for (int i = 1; i < sheet.maxRows; i++) {
@@ -85,13 +118,21 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           'connectedPoints': connectedPoints
         });
         await FirebaseFirestore.instance.collection('Maps').doc(name).set({});
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Uploaded $name successfully.')));
+        }
         debugPrint("Uploaded point: $pointName successfully.");
+        if (mounted) {
+          Navigator.pop(context);
+        }
       }
-
       debugPrint("Data successfully uploaded to Firestore");
+      return sheet;
     } catch (e) {
       debugPrint("Error uploading data to Firestore: $e");
     }
+    return null;
   }
 
   @override
@@ -99,25 +140,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 240, 249, 255),
-        // backgroundColor: Colors.lightGreen.shade50,
         appBar: AppBar(
           centerTitle: true,
           elevation: 1.75,
-          // toolbarHeight: 75,
           backgroundColor: Colors.blue.shade100,
-          // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-          //     // bottomLeft: Radius.circular(20),
-          //     // bottomRight:
-          //     Radius.circular(20))),
-          // leading: const DrawerButton(),
           title: Text('QRIAN',
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall!
                   .copyWith(fontWeight: FontWeight.bold)),
           shadowColor: Colors.blue.shade900,
-          // surfaceTintColor: Colors.blueGrey,
-          // foregroundColor: Colors.white,
           actions: [
             const ThemeSwitcher(),
             IconButton(
@@ -126,40 +158,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   Navigator.pushReplacementNamed(context, '/home-page');
                 },
                 icon: const Icon(Icons.logout_rounded))
-            // IconButton(
-            //     onPressed: () {
-            //       Navigator.pushNamed(context, '/scan-qr');
-            //     },
-            //     icon: const Icon(Icons.qr_code_scanner_rounded))
           ],
-          // backgroundColor: Colors.blue.shade300,
         ),
-
-        // appBar: AppBar(
-        //   elevation: 10,
-        //   toolbarHeight: 75,
-        //   shape: const ContinuousRectangleBorder(
-        //       borderRadius: BorderRadius.only(
-        //           bottomLeft: Radius.circular(75),
-        //           bottomRight: Radius.circular(75))),
-        //   titleSpacing: 30,
-        //   title: const Text('QRIAN'),
-        //   shadowColor: Colors.green,
-        //   surfaceTintColor: Colors.blueGrey,
-        //   foregroundColor: Colors.white,
-        //   actions: [
-        //     IconButton(
-        //         onPressed: () {
-        //           Navigator.pushNamed(context, '/scan-qr');
-        //         },
-        //         icon: const Icon(Icons.qr_code_scanner_rounded))
-        //   ],
-        //   backgroundColor: Colors.teal,
-        // ),
         body: Center(
           child: Column(
             children: [
-              // SelectableText('${FirebaseAuth.instance.currentUser}'),
               const Spacer(),
               ElevatedButton(
                 style: const ButtonStyle(
@@ -171,16 +174,29 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
                     )),
-                    minimumSize: WidgetStatePropertyAll(Size(150, 50))),
-                // const ButtonStyle(
-                //     foregroundColor: WidgetStatePropertyAll(Colors.white),
-                //     backgroundColor: WidgetStatePropertyAll(Colors.teal),
-                //     side: WidgetStatePropertyAll(
-                //         BorderSide(width: 0.5, color: Colors.white)),
-                //     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.all(Radius.circular(20)),
-                //     )),
-                //     minimumSize: WidgetStatePropertyAll(Size(150, 50))),
+                    minimumSize: WidgetStatePropertyAll(Size(175, 50))),
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const GenerateMap()));
+                },
+                child: const Text('Generate Map'),
+              ),
+              const SizedBox(
+                height: 25,
+              ),
+              ElevatedButton(
+                style: const ButtonStyle(
+                    foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    backgroundColor: WidgetStatePropertyAll(
+                        Color.fromARGB(255, 13, 78, 153)),
+                    side: WidgetStatePropertyAll(
+                        BorderSide(width: 0.5, color: Colors.white)),
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    )),
+                    minimumSize: WidgetStatePropertyAll(Size(175, 50))),
                 onPressed: () async {
                   File? file = await pickExcelFile();
                   if (!context.mounted) return;
@@ -211,7 +227,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                     const SizedBox(height: 5),
                                     CustomTextField(
                                       controller: mapName,
-                                      hintText: 'Map Name',
+                                      labelText: 'Map Name',
                                       isLast: true,
                                       keyboard: TextInputType.name,
                                     ),
@@ -240,34 +256,56 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                                             .width -
                                                         50,
                                                     50))),
-                                        // ButtonStyle(
-                                        //     foregroundColor:
-                                        //         const WidgetStatePropertyAll(
-                                        //             Colors.white),
-                                        //     backgroundColor:
-                                        //         WidgetStatePropertyAll(
-                                        //             Colors.teal.shade700),
-                                        //     side: const WidgetStatePropertyAll(
-                                        //         BorderSide(
-                                        //             width: 1,
-                                        //             color: Colors.white)),
-                                        //     shape: const WidgetStatePropertyAll(
-                                        //         RoundedRectangleBorder(
-                                        //       borderRadius: BorderRadius.all(
-                                        //           Radius.circular(20)),
-                                        //     )),
-                                        //     minimumSize: WidgetStatePropertyAll(
-                                        //         Size(
-                                        //             MediaQuery.sizeOf(context)
-                                        //                     .width -
-                                        //                 50,
-                                        //             50))),
                                         onPressed: () async {
-                                          await uploadToFirestore(
-                                              file, mapName.text);
-                                          mapName.clear();
-                                          if (context.mounted) {
-                                            Navigator.pop(context);
+                                          final doc = await FirebaseFirestore
+                                              .instance
+                                              .collection('Maps')
+                                              .get();
+                                          final maps = doc.docs
+                                              .map((doc) => doc.id)
+                                              .toList();
+                                          if (maps.contains(mapName.text)) {
+                                            var sheet = await uploadToFirestore(
+                                                file, mapName.text);
+
+                                            final pdf = pw.Document();
+                                            for (int i = 1;
+                                                i < sheet!.maxRows;
+                                                i++) {
+                                              var row = sheet.row(i);
+
+                                              String pointName =
+                                                  row[0]?.value.toString() ??
+                                                      '';
+
+                                              pdf.addPage(
+                                                pw.Page(
+                                                  build: (pw.Context context) =>
+                                                      pw.Center(
+                                                    child: pw.BarcodeWidget(
+                                                        barcode:
+                                                            pw.Barcode.qrCode(),
+                                                        data:
+                                                            '${mapName.text}\n$pointName'),
+                                                  ),
+                                                ),
+                                              );
+                                            }
+
+                                            final directory = Directory(
+                                                '/storage/emulated/0/Download');
+                                            final filePath =
+                                                '${directory.path}/${mapName.text}.pdf';
+                                            final pdfFile = File(filePath);
+                                            await pdfFile
+                                                .writeAsBytes(await pdf.save());
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(const SnackBar(
+                                                      content: Text(
+                                                          'QR pdf downloaded to Downloads folder')));
+                                            }
+                                            mapName.clear();
                                           }
                                         },
                                         child: const Text('Submit')),
@@ -302,18 +340,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
                     )),
-                    minimumSize: WidgetStatePropertyAll(Size(150, 50))),
-                // const ButtonStyle(
-                //     foregroundColor: WidgetStatePropertyAll(Colors.white),
-                //     backgroundColor: WidgetStatePropertyAll(Colors.teal),
-                //     side: WidgetStatePropertyAll(
-                //         BorderSide(width: 0.5, color: Colors.white)),
-                //     shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.all(Radius.circular(20)),
-                //     )),
-                //     minimumSize: WidgetStatePropertyAll(Size(150, 50))),
+                    minimumSize: WidgetStatePropertyAll(Size(175, 50))),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/all-maps');
+                  Navigator.pushNamed(context, '/all-maps',
+                      arguments: {'isAdmin': true});
                 },
                 child: const Text('All Maps'),
               ),
@@ -321,32 +351,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ],
           ),
         ),
-        // bottomNavigationBar: BottomNavigationBar(
-        //     elevation: 10,
-        //     backgroundColor: Colors.blue,
-        //     currentIndex: index,
-        //     showUnselectedLabels: true,
-        //     selectedItemColor: Theme.of(context).brightness == Brightness.light
-        //         ? Colors.blue.shade800
-        //         : Colors.grey,
-        //     unselectedItemColor: Colors.grey.shade800,
-        //     onTap: (value) {
-        //       setState(() {
-        //         index = value;
-        //       });
-        //     },
-        //     items: const [
-        //       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        //       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        //       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        //       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        //     ]),
-        // floatingActionButton: FloatingActionButton(
-        //     child: const Icon(Icons.logout),
-        //     onPressed: () {
-        //       FirebaseAuth.instance.signOut();
-        //       Navigator.pushReplacementNamed(context, '/home-page');
-        //     }),
       ),
     );
   }

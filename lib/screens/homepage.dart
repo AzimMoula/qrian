@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
     ButtonStyle style = const ButtonStyle(
         foregroundColor: WidgetStatePropertyAll(Colors.white),
         backgroundColor:
-            WidgetStatePropertyAll(Color.fromARGB(255, 13, 78, 153)),
+            WidgetStatePropertyAll(Color.fromARGB(200, 13, 78, 153)),
         side:
             WidgetStatePropertyAll(BorderSide(width: 0.5, color: Colors.white)),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(
@@ -24,34 +24,17 @@ class _HomePageState extends State<HomePage> {
         )),
         minimumSize: WidgetStatePropertyAll(Size(100, 50)));
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 244, 251, 255),
       appBar: AppBar(
         centerTitle: true,
         elevation: 1.75,
-        // toolbarHeight: 75,
-        backgroundColor: Colors.blue.shade100,
-        // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-        //     // bottomLeft: Radius.circular(20),
-        //     // bottomRight:
-        //     Radius.circular(20))),
-        // leading: const DrawerButton(),
+        backgroundColor: const Color.fromRGBO(187, 222, 251, 1),
         title: Text('QRIAN',
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall!
                 .copyWith(fontWeight: FontWeight.bold)),
         shadowColor: Colors.blue.shade900,
-        // surfaceTintColor: Colors.blueGrey,
-        // foregroundColor: Colors.white,
-        actions: const [
-          ThemeSwitcher()
-          // IconButton(
-          //     onPressed: () {
-          //       Navigator.pushNamed(context, '/scan-qr');
-          //     },
-          //     icon: const Icon(Icons.qr_code_scanner_rounded))
-        ],
-        // backgroundColor: Colors.blue.shade300,
+        actions: const [ThemeSwitcher()],
       ),
       body: Column(
         children: [
@@ -59,60 +42,22 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(vertical: 30),
               child: Stack(children: [
                 Opacity(
-                    opacity: 0.75,
+                    opacity: 0.2,
                     child: Image.asset(
-                        width: 110,
-                        height: 110,
-                        'assets/qrian_logo.png',
+                        width: 125,
+                        height: 125,
+                        'assets/qrian_logo_new.png',
                         color: Colors.black)),
                 BackdropFilter(
                     filter: ImageFilter.compose(
-                        inner: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                        inner: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                         outer: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0)),
                     child: Image.asset(
                       width: 125,
                       height: 125,
-                      'assets/qrian_logo.png',
+                      'assets/qrian_logo_new.png',
                     ))
-              ])
-              //  Container(
-              //     decoration: BoxDecoration(boxShadow: [
-              //       BoxShadow(
-              //         color: Colors.blue.shade100,
-              //         blurRadius: 100,
-              //         spreadRadius: -10,
-              //         // offset: const Offset(0, 15),
-              //       )
-              //     ]),
-              //     width: 150,
-              //     height: 150,
-              //     child: Image.asset('assets/qrian_logo.png')),
-              ),
-          // Column(
-          //   crossAxisAlignment: CrossAxisAlignment.center,
-          //   mainAxisAlignment: MainAxisAlignment.end,
-          //   children: [
-          //     ElevatedButton(
-          //         style: style,
-          //         onPressed: () {
-          //           Navigator.pushNamed(context, '/scan-qr');
-          //         },
-          //         child: const Text('Scan a QR')),
-          //     const SizedBox(height: 20),
-          //     ElevatedButton(
-          //         style: style,
-          //         onPressed: () {},
-          //         child: const Text('Download Maps')),
-          //     const SizedBox(height: 20),
-          //     ElevatedButton(
-          //         style: style,
-          //         onPressed: () {
-          //           Navigator.pushNamed(context, '/sign-in');
-          //         },
-          //         child: const Text('Upload a Map')),
-          //     const SizedBox(height: 20),
-          //   ],
-          // ),
+              ])),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
             child: Column(
@@ -125,50 +70,14 @@ class _HomePageState extends State<HomePage> {
                       .headlineSmall!
                       .copyWith(fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 5),
                 const Text(
                   'QRIAN is an app that lets you navigate through large, complex buildings easily without access to network or GPS using QRs.',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 0, top: 15),
-                //   child: ElevatedButton(
-                //       style: style,
-                //       onPressed: () {
-                //         Navigator.pushNamed(context, '/scan-qr');
-                //       },
-                //       child: const Text('Learn More')),
-                // ),
               ],
             ),
           ),
-          // const Spacer(
-          //   flex: 10,
-          // ),
-          // Padding(
-          //   padding: const EdgeInsets.only(left: 15),
-          //   child: Align(
-          //     alignment: Alignment.centerLeft,
-          //     child: ElevatedButton(
-          //         style: style.copyWith(
-          //             backgroundColor:
-          //                 WidgetStatePropertyAll(Colors.teal.shade900),
-          //             shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-          //                 borderRadius: BorderRadius.circular(100))),
-          //             minimumSize:
-          //                 const WidgetStatePropertyAll(Size(380, 80))),
-          //         onPressed: () {
-          //           Navigator.pushNamed(context, '/scan-qr');
-          //         },
-          //         child: const Text(
-          //           'Scan a QR',
-          //           style: TextStyle(
-          //               fontSize: 15, fontWeight: FontWeight.w600),
-          //         )),
-          //   ),
-          // ),
-          // const Spacer(
-          //   flex: 2,
-          // ),
           const Spacer(
             flex: 1,
           ),
@@ -232,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                                       style: style.copyWith(
                                         minimumSize:
                                             const WidgetStatePropertyAll(
-                                                Size(100, 50)),
+                                                Size(100, 40)),
                                       ),
                                       onPressed: () {
                                         Navigator.pushNamed(
@@ -263,9 +172,10 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
+                            width: 92,
                             decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
                                 border: Border.all(color: Colors.white),
+                                color: Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(15)),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 15.0),
@@ -304,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                                       style: style.copyWith(
                                         minimumSize:
                                             const WidgetStatePropertyAll(
-                                                Size(100, 50)),
+                                                Size(100, 40)),
                                       ),
                                       onPressed: () {
                                         Navigator.pushNamed(
@@ -320,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-              ],
+                              ],
             ),
           ),
         ],

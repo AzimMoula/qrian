@@ -109,7 +109,7 @@ class MaterialTheme {
       onErrorContainer: Color(0xff410002),
       background: Color(0xfffdf7ff),
       onBackground: Color(0xff1d1b20),
-      surface: Color(0xfffdf7ff),
+      surface: Color.fromRGBO(244, 251, 255, 1),
       onSurface: Color(0xff1d1b20),
       surfaceVariant: Color(0xffe7e0eb),
       onSurfaceVariant: Color(0xff49454e),

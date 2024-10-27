@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_force_directed_graph/flutter_force_directed_graph.dart';
 import 'package:qrian/global/widgets/theme_switcher.dart';
-// import 'package:graphview/GraphView.dart';
 
 class MapVisualize extends StatefulWidget {
   final String name;
@@ -18,9 +17,9 @@ class MapVisualize extends StatefulWidget {
 class _MapVisualizeState extends State<MapVisualize> {
   ForceDirectedGraphController graph = ForceDirectedGraphController(
       graph: ForceDirectedGraph(
-          config: const GraphConfig(
-              length: 75, repulsion: 100, repulsionRange: 200)));
-  // late Algorithm builder;
+    config: const GraphConfig(length: 500, repulsion: 100, repulsionRange: 200),
+  ));
+
   Set n = {};
   Set<Set> s = {};
   Set atlast = {};
@@ -63,14 +62,6 @@ class _MapVisualizeState extends State<MapVisualize> {
         },
       );
     });
-    // builder = BuchheimWalkerAlgorithm(
-    //     BuchheimWalkerConfiguration()
-    // ..siblingSeparation = (100)
-    // ..levelSeparation = (100)
-    // ..subtreeSeparation = (100)
-    // ..orientation = BuchheimWalkerConfiguration.ORIENTATION_LEFT_RIGHT,
-    // ,
-    // ArrowEdgeRenderer());
   }
 
   Set<Set<T>> removeDuplicates<T>(Set<Set<T>> input) {
@@ -110,75 +101,21 @@ class _MapVisualizeState extends State<MapVisualize> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-            // backgroundColor: Colors.lightGreen.shade50,
             backgroundColor: const Color.fromARGB(255, 244, 251, 255),
             appBar: AppBar(
               centerTitle: true,
               elevation: 1.75,
-              // toolbarHeight: 75,
               backgroundColor: Colors.blue.shade100,
-              // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-              //     // bottomLeft: Radius.circular(20),
-              //     // bottomRight:
-              //     Radius.circular(20))),
-              // leading: const DrawerButton(),
-              title: Text('QRIAN',
+              title: Text(widget.name,
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall!
                       .copyWith(fontWeight: FontWeight.bold)),
               shadowColor: Colors.blue.shade900,
-              // surfaceTintColor: Colors.blueGrey,
-              // foregroundColor: Colors.white,
               actions: const [
                 ThemeSwitcher(),
-                // IconButton(
-                //     onPressed: () {
-                //       Navigator.pushNamed(context, '/scan-qr');
-                //     },
-                //     icon: const Icon(Icons.qr_code_scanner_rounded))
               ],
-              // backgroundColor: Colors.blue.shade300,
             ),
-
-            // appBar: AppBar(
-            //   elevation: 10,
-            //   toolbarHeight: 75,
-            //   shape: const ContinuousRectangleBorder(
-            //       borderRadius: BorderRadius.only(
-            //           bottomLeft: Radius.circular(75),
-            //           bottomRight: Radius.circular(75))),
-            //   title: const Text('QRIAN'),
-            //   // leading: BackButton(
-            //   //   onPressed: () {
-            //   //     if (stream !=
-            //   //         FirebaseFirestore.instance.collection('Maps').snapshots()) {
-            //   //       debugdebugdebugPrint(stream.toString());
-            //   //       setState(() {
-            //   //         stream =
-            //   //             FirebaseFirestore.instance.collection('Maps').snapshots();
-            //   //       });
-            //   //     } else {
-            //   //       try {
-            //   //         Navigator.pop(context);
-            //   //       } catch (e) {
-            //   //         debugdebugdebugPrint('Error: $e');
-            //   //       }
-            //   //     }
-            //   //   },
-            //   // ),
-            //   shadowColor: Colors.green,
-            //   surfaceTintColor: Colors.blueGrey,
-            //   foregroundColor: Colors.white,
-            //   actions: [
-            //     IconButton(
-            //         onPressed: () {
-            //           Navigator.pushNamed(context, '/scan-qr');
-            //         },
-            //         icon: const Icon(Icons.qr_code_scanner_rounded))
-            //   ],
-            //   backgroundColor: Colors.teal,
-            // ),
             body: StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection('Maps')
@@ -198,20 +135,8 @@ class _MapVisualizeState extends State<MapVisualize> {
                     return const Center(child: Text('No data found'));
                   }
                   for (var docSnap in snapshot.data!.docs) {
-                    // map[docSnap.id] =
-                    n.add(Node(docSnap.id)
-                        // graph.addNode(Node(docSnap.id)
-                        // Padding(
-                        //   padding: const EdgeInsets.all(15),
-                        //   child: CircleAvatar(
-                        //     backgroundColor: docSnap['type'] == 'special'
-                        //         ? Colors.red
-                        //         : Colors.amber,
-                        //     child: Text(docSnap.id),
-                        //   ),
-                        // ),
-                        );
-                    // debugdebugPrint('Grpah: ' + graph.nodes.toString());
+                    n.add(Node(docSnap.id));
+
                     for (var doc in docSnap['connectedPoints']) {
                       if (docSnap.id != doc['pointId']) {
                         s.add({docSnap.id, doc['pointId']});
@@ -220,10 +145,6 @@ class _MapVisualizeState extends State<MapVisualize> {
                         'floor': docSnap['floor'],
                         'type': docSnap['type']
                       };
-                      // graph.addEdge(
-                      //     Edge(map[docSnap.id]!, Node(doc['pointId'])));
-                      // debugdebugPrint(
-                      //     'connected ${docSnap.id} and ${doc['pointId']}');
                     }
                   }
                   for (var c in n) {
@@ -256,9 +177,6 @@ class _MapVisualizeState extends State<MapVisualize> {
                       nodesBuilder: (context, node) {
                         return CircleAvatar(
                           radius: 15,
-                          // // width: 24,
-                          // // height: 24,
-                          // alignment: Alignment.center,
                           backgroundColor: map[node.data]['type'] == 'special'
                               ? Colors.red
                               : Colors.amber,
@@ -276,41 +194,6 @@ class _MapVisualizeState extends State<MapVisualize> {
                       },
                     ),
                   );
-                  // return Center(
-                  //   child: InteractiveViewer(
-                  //     constrained: false,
-                  //     boundaryMargin: const EdgeInsets.all(100),
-                  //     minScale: 0.0001,
-                  //     maxScale: 10.6,
-                  //     child: GraphView(
-                  //         animated: false,
-                  //         graph: graph,
-                  //         algorithm: FruchtermanReingoldAlgorithm(),
-                  //         builder: (Node node) {
-                  //           // I can decide what widget should be shown here based on the id
-                  //           var a = node.key!.value;
-                  //           if (a == 'A') {
-                  //             return CircleAvatar(
-                  //               backgroundColor: Colors.red,
-                  //               // docSnap['type'] == 'special' ? Colors.red : Colors.amber,
-                  //               child: Text(a.toString()),
-                  //             );
-                  //           }
-                  //           return CircleAvatar(
-                  //             backgroundColor: Colors.amber,
-                  //             child: Text(a.toString()),
-                  //           );
-                  //         }),
-                  //   ),
-                  // );
-                  //     return Padding(
-                  //       padding: const EdgeInsets.all(15),
-                  //       child: Wrap(
-                  //         children: map,
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
                 })));
   }
 }

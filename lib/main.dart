@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:qrian/admin/admin_home.dart';
 import 'package:qrian/auth/register.dart';
@@ -36,10 +35,6 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'QRIAN',
-          // theme: ThemeData(
-          //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          //   useMaterial3: true,
-          // ),
           theme: MaterialTheme(context).light(),
           darkTheme: MaterialTheme(context).dark(),
           themeMode: qrianProvider.themeMode,

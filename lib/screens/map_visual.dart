@@ -1,7 +1,4 @@
-// ignore_for_file: avoid_print
-
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_force_directed_graph/flutter_force_directed_graph.dart';
@@ -120,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 return GestureDetector(
                   onTap: () {
-                    print("onTap $data");
+                    debugPrint("onTap $data");
                     setState(() {
                       if (_nodes.contains(data)) {
                         _nodes.remove(data);
@@ -159,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       } else {
                         _edges.add(edge);
                       }
-                      print("onTap $a <-$distance-> $b");
+                      debugPrint("onTap $a <-$distance-> $b");
                     });
                   },
                   child: Container(

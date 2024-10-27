@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qrian/auth/sign_in.dart';
 import 'package:qrian/global/widgets/text_field.dart';
 import 'package:qrian/global/widgets/theme_switcher.dart';
@@ -21,8 +20,6 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     final auth = FirebaseAuth.instance;
-    final userID = auth.currentUser?.uid;
-    final db = FirebaseFirestore.instance;
 
     return SafeArea(
         child: Scaffold(
@@ -30,12 +27,7 @@ class _RegisterState extends State<Register> {
       appBar: AppBar(
         centerTitle: true,
         elevation: 1.75,
-        // toolbarHeight: 75,
         backgroundColor: Colors.blue.shade100,
-        // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-        //     // bottomLeft: Radius.circular(20),
-        //     // bottomRight:
-        //     Radius.circular(20))),
         leading: BackButton(
           onPressed: () {
             Navigator.pushReplacement(
@@ -57,54 +49,8 @@ class _RegisterState extends State<Register> {
                 .headlineSmall!
                 .copyWith(fontWeight: FontWeight.bold)),
         shadowColor: Colors.blue.shade900,
-        // surfaceTintColor: Colors.blueGrey,
-        // foregroundColor: Colors.white,
-        actions: const [
-          ThemeSwitcher()
-          // IconButton(
-          //     onPressed: () {
-          //       Navigator.pushNamed(context, '/scan-qr');
-          //     },
-          //     icon: const Icon(Icons.qr_code_scanner_rounded))
-        ],
-        // backgroundColor: Colors.blue.shade300,
+        actions: const [ThemeSwitcher()],
       ),
-
-      // appBar: AppBar(
-      //   elevation: 10,
-      //   toolbarHeight: 75,
-      //   leading: BackButton(
-      //     onPressed: () {
-      //       Navigator.pushReplacement(
-      //           context,
-      //           PageRouteBuilder(
-      //             transitionDuration: Duration.zero,
-      //             pageBuilder: (context, animation, secondaryAnimation) =>
-      //                 const Flipper(
-      //               front: Register(),
-      //               back: SignIn(),
-      //               reverse: true,
-      //             ),
-      //           ));
-      //     },
-      //   ),
-      //   shape: const ContinuousRectangleBorder(
-      //       borderRadius: BorderRadius.only(
-      //           bottomLeft: Radius.circular(75),
-      //           bottomRight: Radius.circular(75))),
-      //   title: const Text('QRIAN'),
-      //   shadowColor: Colors.green,
-      //   surfaceTintColor: Colors.blueGrey,
-      //   foregroundColor: Colors.white,
-      //   actions: [
-      //     IconButton(
-      //         onPressed: () {
-      //           Navigator.pushNamed(context, '/scan-qr');
-      //         },
-      //         icon: const Icon(Icons.qr_code_scanner_rounded))
-      //   ],
-      //   backgroundColor: Colors.teal,
-      // ),
       body: SingleChildScrollView(
         child: Center(
           child: Column(
@@ -132,7 +78,7 @@ class _RegisterState extends State<Register> {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: CustomTextField(
                   controller: email,
-                  hintText: 'email',
+                  labelText: 'email',
                 ),
               ),
               const SizedBox(height: 25),
@@ -140,11 +86,11 @@ class _RegisterState extends State<Register> {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: CustomTextField(
                   controller: password,
-                  hintText: 'password',
+                  labelText: 'password',
                   isObscured: true,
                 ),
               ),
-              const SizedBox(height: 45),
+              const SizedBox(height: 50),
               ElevatedButton(
                   style: ButtonStyle(
                       foregroundColor:
@@ -159,19 +105,6 @@ class _RegisterState extends State<Register> {
                       )),
                       minimumSize: WidgetStatePropertyAll(
                           Size(MediaQuery.sizeOf(context).width - 50, 50))),
-                  // ButtonStyle(
-                  //     foregroundColor:
-                  //         const WidgetStatePropertyAll(Colors.white),
-                  //     backgroundColor:
-                  //         WidgetStatePropertyAll(Colors.teal.shade700),
-                  //     side: const WidgetStatePropertyAll(
-                  //         BorderSide(width: 1, color: Colors.white)),
-                  //     shape:
-                  //         const WidgetStatePropertyAll(RoundedRectangleBorder(
-                  //       borderRadius: BorderRadius.all(Radius.circular(20)),
-                  //     )),
-                  //     minimumSize: WidgetStatePropertyAll(
-                  //         Size(MediaQuery.sizeOf(context).width - 50, 50))),
                   onPressed: () async {
                     try {
                       await auth.createUserWithEmailAndPassword(
@@ -230,17 +163,8 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                // child: SizedBox(
-                // height: 75,
-                // width: 75,
+                padding: const EdgeInsets.only(top: 10),
                 child: GestureDetector(
-                  // style: ButtonStyle(
-                  //     backgroundColor:
-                  //         const WidgetStatePropertyAll(Colors.white),
-                  //     shape: WidgetStatePropertyAll(
-                  //         ContinuousRectangleBorder(
-                  //             borderRadius: BorderRadius.circular(25)))),
                   onTap: () async {
                     try {
                       await AuthService().signInWithGoogle();
@@ -280,19 +204,7 @@ class _RegisterState extends State<Register> {
                           'assets/google.png'),
                     ),
                   ),
-                  // Image.asset(
-                  //     fit: BoxFit.fitWidth,
-                  //     height: 50,
-                  //     width: 50,
-                  //     'assets/google.png')
-                  // const Text(
-                  //   'G',
-                  //   textAlign: TextAlign.center,
-                  //   style: TextStyle(
-                  //       fontWeight: FontWeight.bold, fontSize: 25),
-                  // ),
                 ),
-                // ),
               ),
               const SizedBox(height: 10),
               Row(
@@ -300,6 +212,9 @@ class _RegisterState extends State<Register> {
                 children: [
                   const Text('Have an account?'),
                   TextButton(
+                      style: const ButtonStyle(
+                          overlayColor:
+                              WidgetStatePropertyAll(Colors.transparent)),
                       onPressed: () {
                         Navigator.pushReplacement(
                             context,
@@ -320,7 +235,10 @@ class _RegisterState extends State<Register> {
                             .textTheme
                             .bodyMedium!
                             .copyWith(color: Colors.blue.shade900),
-                      ))
+                      )),
+                  const SizedBox(
+                    height: 20,
+                  )
                 ],
               )
             ],

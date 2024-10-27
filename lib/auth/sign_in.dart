@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:qrian/auth/register.dart';
 import 'package:qrian/global/widgets/text_field.dart';
@@ -23,62 +22,24 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     final auth = FirebaseAuth.instance;
-    final userID = auth.currentUser?.uid;
-    final db = FirebaseFirestore.instance;
 
     return SafeArea(
       child: Scaffold(
-        // backgroundColor: Colors.lightGreen.shade50,
         backgroundColor: const Color.fromARGB(255, 240, 249, 255),
-        // appBar: AppBar(
-        //   elevation: 10,
-        //   toolbarHeight: 75,
-        //   shape: const ContinuousRectangleBorder(
-        //       borderRadius: BorderRadius.only(
-        //           bottomLeft: Radius.circular(75),
-        //           bottomRight: Radius.circular(75))),
-        //   title: const Text('QRIAN'),
-        //   shadowColor: Colors.green,
-        //   surfaceTintColor: Colors.blueGrey,
-        //   foregroundColor: Colors.white,
-        //   actions: [
-        //     IconButton(
-        //         onPressed: () {
-        //           Navigator.pushNamed(context, '/scan-qr');
-        //         },
-        //         icon: const Icon(Icons.qr_code_scanner_rounded))
-        //   ],
-        //   backgroundColor: Colors.teal,
-        // ),
         appBar: AppBar(
           centerTitle: true,
           elevation: 1.75,
-          // toolbarHeight: 75,
           backgroundColor: Colors.blue.shade100,
-          // shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(
-          //     // bottomLeft: Radius.circular(20),
-          //     // bottomRight:
-          //     Radius.circular(20))),
-          // leading: const DrawerButton(),
           title: Text('QRIAN',
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall!
                   .copyWith(fontWeight: FontWeight.bold)),
           shadowColor: Colors.blue.shade900,
-          // surfaceTintColor: Colors.blueGrey,
-          // foregroundColor: Colors.white,
           actions: const [
             ThemeSwitcher(),
-            // IconButton(
-            //     onPressed: () {
-            //       Navigator.pushNamed(context, '/scan-qr');
-            //     },
-            //     icon: const Icon(Icons.qr_code_scanner_rounded))
           ],
-          // backgroundColor: Colors.blue.shade300,
         ),
-
         body: SingleChildScrollView(
           child: Center(
             child: Column(
@@ -129,7 +90,7 @@ class _SignInState extends State<SignIn> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: CustomTextField(
                     controller: email,
-                    hintText: 'email',
+                    labelText: 'email',
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -137,7 +98,7 @@ class _SignInState extends State<SignIn> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: CustomTextField(
                     controller: password,
-                    hintText: 'password',
+                    labelText: 'password',
                     isObscured: true,
                   ),
                 ),
@@ -211,23 +172,12 @@ class _SignInState extends State<SignIn> {
                         )),
                         minimumSize: WidgetStatePropertyAll(
                             Size(MediaQuery.sizeOf(context).width - 50, 50))),
-                    // ButtonStyle(
-                    //     foregroundColor:
-                    //         const WidgetStatePropertyAll(Colors.white),
-                    //     backgroundColor:
-                    //         WidgetStatePropertyAll(Colors.teal.shade700),
-                    //     side: const WidgetStatePropertyAll(
-                    //         BorderSide(width: 1, color: Colors.white)),
-                    //     shape:
-                    //         const WidgetStatePropertyAll(RoundedRectangleBorder(
-                    //       borderRadius: BorderRadius.all(Radius.circular(20)),
-                    //     )),
-                    //     minimumSize: WidgetStatePropertyAll(
-                    //         Size(MediaQuery.sizeOf(context).width - 50, 50))),
                     onPressed: () async {
                       try {
-                        await auth.signInWithEmailAndPassword(
-                            email: email.text, password: password.text);
+                        if (FirebaseAuth.instance.currentUser == null) {
+                          await auth.signInWithEmailAndPassword(
+                              email: email.text, password: password.text);
+                        }
                         setState(() {});
                         Future.delayed(const Duration(milliseconds: 500), () {
                           if (context.mounted) {
@@ -286,17 +236,8 @@ class _SignInState extends State<SignIn> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  // child: SizedBox(
-                  // height: 75,
-                  // width: 75,
+                  padding: const EdgeInsets.only(top: 10),
                   child: GestureDetector(
-                    // style: ButtonStyle(
-                    //     backgroundColor:
-                    //         const WidgetStatePropertyAll(Colors.white),
-                    //     shape: WidgetStatePropertyAll(
-                    //         ContinuousRectangleBorder(
-                    //             borderRadius: BorderRadius.circular(25)))),
                     onTap: () async {
                       try {
                         await AuthService().signInWithGoogle();
@@ -336,26 +277,17 @@ class _SignInState extends State<SignIn> {
                             'assets/google.png'),
                       ),
                     ),
-                    // Image.asset(
-                    //     fit: BoxFit.fitWidth,
-                    //     height: 50,
-                    //     width: 50,
-                    //     'assets/google.png')
-                    // const Text(
-                    //   'G',
-                    //   textAlign: TextAlign.center,
-                    //   style: TextStyle(
-                    //       fontWeight: FontWeight.bold, fontSize: 25),
-                    // ),
                   ),
-                  // ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text('Don\'t have an account?'),
                     TextButton(
+                        style: const ButtonStyle(
+                            overlayColor:
+                                WidgetStatePropertyAll(Colors.transparent)),
                         onPressed: () {
                           Navigator.pushReplacement(
                               context,
@@ -373,7 +305,10 @@ class _SignInState extends State<SignIn> {
                               .textTheme
                               .bodyMedium!
                               .copyWith(color: Colors.blue.shade900),
-                        ))
+                        )),
+                    const SizedBox(
+                      height: 20,
+                    )
                   ],
                 )
               ],
